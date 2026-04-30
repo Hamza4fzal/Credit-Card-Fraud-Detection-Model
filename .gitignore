@@ -16,7 +16,7 @@ creditcard.csv
 cleaned_creditcard.csv
 
 # Large Model / Pickle Files
-*.pkl
+#*.pkl
 
 # Logs
 transaction_logs.csv

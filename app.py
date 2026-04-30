@@ -15,11 +15,20 @@ st.set_page_config(
 @st.cache_resource
 def load_model():
     try:
-        model = joblib.load('model.pkl')
-        scaler_time = joblib.load('scaler_time.pkl')
-        scaler_amount = joblib.load('scaler_amount.pkl')
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        
+        model_path = os.path.join(BASE_DIR, "model.pkl")
+        scaler_time_path = os.path.join(BASE_DIR, "scaler_time.pkl")
+        scaler_amount_path = os.path.join(BASE_DIR, "scaler_amount.pkl")
+
+        model = joblib.load(model_path)
+        scaler_time = joblib.load(scaler_time_path)
+        scaler_amount = joblib.load(scaler_amount_path)
+
         return model, scaler_time, scaler_amount
-    except FileNotFoundError:
+
+    except Exception as e:
+        st.error(f"Error loading model: {e}")
         return None, None, None
 
 @st.cache_data
