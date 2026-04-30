@@ -1,0 +1,31 @@
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Large Data Files (DO NOT COMMIT to GitHub)
+creditcard.csv
+cleaned_creditcard.csv
+
+# Large Model / Pickle Files
+*.pkl
+
+# Logs
+transaction_logs.csv
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
