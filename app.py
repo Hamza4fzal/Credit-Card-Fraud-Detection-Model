@@ -63,6 +63,22 @@ def get_class_distribution(uploaded_file=None):
     except Exception:
         return None
 
+@st.cache_data
+def get_scaling_visualization_data(uploaded_file=None):
+    try:
+        source = uploaded_file if uploaded_file is not None else 'creditcard.csv'
+        if uploaded_file is not None:
+            uploaded_file.seek(0)
+        df = pd.read_csv(source, usecols=['Time', 'Amount'])
+        if 'Amount' not in df.columns:
+            return None
+        
+        # Take a sample to display
+        sample_df = df.sample(min(1000, len(df)), random_state=42)
+        return sample_df
+    except Exception:
+        return None
+
 model, scaler_time, scaler_amount = load_model()
 
 # --- Functions ---
@@ -217,3 +233,28 @@ with tab2:
         st.bar_chart(class_counts, color="#ff4b4b")
     else:
         st.error("Dataset not found. Please upload 'creditcard.csv' in the sidebar.")
+
+    st.divider()
+    st.subheader("Data Preprocessing Effects")
+    st.write("""
+    During the preprocessing phase, the dataset is cleaned by dropping duplicate transactions. 
+    Then, the `Time` and `Amount` features are standardized using `StandardScaler` to ensure all features contribute equally to the model without bias.
+    """)
+    
+    sample_df = get_scaling_visualization_data(uploaded_file)
+    if sample_df is not None and scaler_time is not None and scaler_amount is not None:
+        scaled_df = sample_df.copy()
+        scaled_df['Scaled Time'] = scaler_time.transform(sample_df['Time'].values.reshape(-1, 1))
+        scaled_df['Scaled Amount'] = scaler_amount.transform(sample_df['Amount'].values.reshape(-1, 1))
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Before Scaling (Raw Data)**")
+            st.dataframe(sample_df[['Time', 'Amount']].head(15), use_container_width=True)
+        with col2:
+            st.write("**After Scaling (Preprocessed Data)**")
+            st.dataframe(scaled_df[['Scaled Time', 'Scaled Amount']].head(15), use_container_width=True)
+            
+        st.info("Notice how the scaled values are centered around 0. This is crucial for Logistic Regression to perform optimally!")
+    else:
+        st.info("Upload the dataset to see the preprocessing visualization.")
