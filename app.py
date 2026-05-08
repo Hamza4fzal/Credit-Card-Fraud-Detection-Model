@@ -5,13 +5,13 @@ import joblib
 import os
 import datetime
 
-# --- Page Configuration ---
+#Page Configuration 
 st.set_page_config(
     page_title="Credit Card Fraud Detection",
     layout="wide"
 )
 
-# --- Load Model and Data ---
+#Load Model and Data 
 @st.cache_resource
 def load_model():
     try:
@@ -56,7 +56,6 @@ def get_class_distribution(uploaded_file=None):
         source = uploaded_file if uploaded_file is not None else 'creditcard.csv'
         if uploaded_file is not None:
             uploaded_file.seek(0)
-        # Load only the Class column to save memory
         df = pd.read_csv(source, usecols=['Class'])
         class_counts = df['Class'].value_counts().rename(index={0: 'Valid (0)', 1: 'Fraud (1)'})
         return class_counts
@@ -81,7 +80,7 @@ def get_scaling_visualization_data(uploaded_file=None):
 
 model, scaler_time, scaler_amount = load_model()
 
-# --- Functions ---
+# Functions
 def log_transaction(transaction_data, prediction, probability):
     """Stores the transaction log in a CSV file."""
     log_file = 'transaction_logs.csv'
@@ -105,7 +104,7 @@ def log_transaction(transaction_data, prediction, probability):
     else:
         df_log.to_csv(log_file, mode='a', header=False, index=False)
 
-# --- UI Layout ---
+# UI Layout
 st.title(" Credit Card Fraud Detection System")
 st.markdown("""
 This application uses a Machine Learning model to detect fraudulent credit card transactions. 
@@ -116,7 +115,7 @@ if model is None:
     st.error("Model not found! Please run `preprocessing.py` and `model_training.py` first.")
     st.stop()
 
-# --- Sidebar for Navigation/Logs ---
+# Sidebar for Navigation/Logs 
 with st.sidebar:
     st.header("Dataset")
     uploaded_file = st.file_uploader("Upload creditcard.csv (if dataset not found)", type=['csv'])
@@ -130,7 +129,7 @@ with st.sidebar:
         # Flagging Anomalies
         fraud_count = len(logs[logs['Prediction'] == 'Fraud'])
         if fraud_count > 0:
-            st.warning(f"⚠️ {fraud_count} anomalous (fraudulent) transactions detected in logs!")
+            st.warning(f"{fraud_count} anomalous (fraudulent) transactions detected in logs!")
         
         if st.button("Clear Logs"):
             os.remove('transaction_logs.csv')
@@ -140,7 +139,7 @@ with st.sidebar:
 
 fraud_data, normal_data = load_sample_data(uploaded_file)
 
-# --- Main Interaction Area ---
+# Main Interaction Area 
 tab1, tab2 = st.tabs([" Predictor", " Data Visualization"])
 
 with tab1:
