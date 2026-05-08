@@ -32,27 +32,38 @@ def load_model():
         return None, None, None
 
 @st.cache_data
-def load_sample_data():
+def load_sample_data(uploaded_file=None):
     try:
-        df = pd.read_csv('creditcard.csv')
-        fraud_data = df[df['Class'] == 1].sample(50)
-        normal_data = df[df['Class'] == 0].sample(50)
+        source = uploaded_file if uploaded_file is not None else 'creditcard.csv'
+        if uploaded_file is not None:
+            uploaded_file.seek(0)
+        df = pd.read_csv(source)
+        if 'Class' not in df.columns:
+            return None, None
+        
+        num_fraud = min(50, len(df[df['Class'] == 1]))
+        num_normal = min(50, len(df[df['Class'] == 0]))
+        
+        fraud_data = df[df['Class'] == 1].sample(num_fraud) if num_fraud > 0 else None
+        normal_data = df[df['Class'] == 0].sample(num_normal) if num_normal > 0 else None
         return fraud_data, normal_data
-    except FileNotFoundError:
+    except Exception:
         return None, None
 
 @st.cache_data
-def get_class_distribution():
+def get_class_distribution(uploaded_file=None):
     try:
+        source = uploaded_file if uploaded_file is not None else 'creditcard.csv'
+        if uploaded_file is not None:
+            uploaded_file.seek(0)
         # Load only the Class column to save memory
-        df = pd.read_csv('creditcard.csv', usecols=['Class'])
+        df = pd.read_csv(source, usecols=['Class'])
         class_counts = df['Class'].value_counts().rename(index={0: 'Valid (0)', 1: 'Fraud (1)'})
         return class_counts
-    except FileNotFoundError:
+    except Exception:
         return None
 
 model, scaler_time, scaler_amount = load_model()
-fraud_data, normal_data = load_sample_data()
 
 # --- Functions ---
 def log_transaction(transaction_data, prediction, probability):
@@ -91,6 +102,9 @@ if model is None:
 
 # --- Sidebar for Navigation/Logs ---
 with st.sidebar:
+    st.header("Dataset")
+    uploaded_file = st.file_uploader("Upload creditcard.csv (if dataset not found)", type=['csv'])
+    
     st.header("Transaction Logs")
     st.write("Recent predictions are stored here.")
     if os.path.exists('transaction_logs.csv'):
@@ -107,6 +121,8 @@ with st.sidebar:
             st.rerun()
     else:
         st.info("No transactions logged yet.")
+
+fraud_data, normal_data = load_sample_data(uploaded_file)
 
 # --- Main Interaction Area ---
 tab1, tab2 = st.tabs([" Predictor", " Data Visualization"])
@@ -125,12 +141,16 @@ with tab1:
                 sample = normal_data.sample(1).iloc[0]
                 st.session_state['dummy_data'] = sample
                 st.success("Loaded normal transaction data!")
+            else:
+                st.error("Dataset not found. Please upload 'creditcard.csv' in the sidebar.")
     
         if st.button("Generate Dummy FRAUDULENT Transaction"):
             if fraud_data is not None:
                 sample = fraud_data.sample(1).iloc[0]
                 st.session_state['dummy_data'] = sample
                 st.error("Loaded fraudulent transaction data!")
+            else:
+                st.error("Dataset not found. Please upload 'creditcard.csv' in the sidebar.")
     
     with col2:
         st.write("### Option 2: Manual Input")
@@ -191,9 +211,9 @@ with tab2:
     are required during preprocessing to train the Machine Learning model effectively.
     """)
     
-    class_counts = get_class_distribution()
+    class_counts = get_class_distribution(uploaded_file)
     if class_counts is not None:
         # Streamlit's built-in bar chart
         st.bar_chart(class_counts, color="#ff4b4b")
     else:
-        st.error("Dataset not found. Please ensure 'creditcard.csv' is present.")
+        st.error("Dataset not found. Please upload 'creditcard.csv' in the sidebar.")
